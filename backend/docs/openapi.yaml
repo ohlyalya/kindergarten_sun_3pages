@@ -1,0 +1,332 @@
+openapi: 3.0.3
+info:
+  title: ГБДОУ «Солнце» API
+  description: API для сайта детского сада. Backend написан на Go, данные хранятся в памяти приложения, формы проходят валидацию и сохраняются в map.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Локальный backend
+paths:
+  /api/health:
+    get:
+      summary: Проверка доступности backend
+      tags: [System]
+      responses:
+        '200':
+          description: Backend работает
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+  /api/home:
+    get:
+      summary: Данные главной страницы
+      tags: [Content]
+      responses:
+        '200':
+          description: Hero-блок, преимущества и помещения
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HomeResponse'
+  /api/programs:
+    get:
+      summary: Данные страницы «Образовательные программы»
+      tags: [Content]
+      responses:
+        '200':
+          description: Группы, дополнительные занятия и педагоги
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramsResponse'
+  /api/parents:
+    get:
+      summary: Данные страницы «Для родителей»
+      tags: [Content]
+      responses:
+        '200':
+          description: Отзывы, мероприятия, новости и события
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParentsResponse'
+  /api/search:
+    get:
+      summary: Поиск по контенту сайта
+      tags: [Content]
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+          required: true
+          description: Поисковая строка
+          example: питание
+      responses:
+        '200':
+          description: Найденные элементы сайта
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SearchResult'
+  /api/applications:
+    get:
+      summary: Получить заявки на запись
+      tags: [Applications]
+      responses:
+        '200':
+          description: Список заявок, сохранённых в памяти backend
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Application'
+    post:
+      summary: Создать заявку на запись в детский сад
+      tags: [Applications]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationRequest'
+      responses:
+        '201':
+          description: Заявка создана и сохранена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Application'
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/questions:
+    get:
+      summary: Получить вопросы родителей
+      tags: [Questions]
+      responses:
+        '200':
+          description: Список вопросов, сохранённых в памяти backend
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Question'
+    post:
+      summary: Задать вопрос заведующему или администрации
+      tags: [Questions]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuestionRequest'
+      responses:
+        '201':
+          description: Вопрос создан и сохранён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Question'
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    ContactInfo:
+      type: object
+      properties:
+        address: { type: string }
+        phone: { type: string }
+        email: { type: string }
+        hours: { type: string }
+    Hero:
+      type: object
+      properties:
+        title: { type: string }
+        image: { type: string }
+        contactInfo:
+          $ref: '#/components/schemas/ContactInfo'
+    Advantage:
+      type: object
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        description: { type: string }
+        image: { type: string }
+    Room:
+      type: object
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        description: { type: string }
+        image: { type: string }
+    Group:
+      type: object
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        age: { type: string }
+        icon: { type: string }
+        description: { type: string }
+    Activity:
+      type: object
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        description: { type: string }
+        image: { type: string }
+    Teacher:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        position: { type: string }
+        description: { type: string }
+        image: { type: string }
+        isMain: { type: boolean }
+    Review:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        text: { type: string }
+        avatar: { type: string }
+        createdAt: { type: string }
+    Event:
+      type: object
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        date: { type: string }
+        description: { type: string }
+        image: { type: string }
+    News:
+      type: object
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        date: { type: string }
+        description: { type: string }
+        image: { type: string }
+    HomeResponse:
+      type: object
+      properties:
+        hero:
+          $ref: '#/components/schemas/Hero'
+        advantages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Advantage'
+        rooms:
+          type: array
+          items:
+            $ref: '#/components/schemas/Room'
+    ProgramsResponse:
+      type: object
+      properties:
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/Group'
+        activities:
+          type: array
+          items:
+            $ref: '#/components/schemas/Activity'
+        teachers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Teacher'
+    ParentsResponse:
+      type: object
+      properties:
+        reviews:
+          type: array
+          items:
+            $ref: '#/components/schemas/Review'
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/Event'
+        news:
+          type: array
+          items:
+            $ref: '#/components/schemas/News'
+    ApplicationRequest:
+      type: object
+      required: [parent, phone, childName, childAge]
+      properties:
+        parent:
+          type: string
+          example: Анна Иванова
+        phone:
+          type: string
+          example: '+7 900 123-45-67'
+        childName:
+          type: string
+          example: София
+        childAge:
+          type: integer
+          minimum: 1
+          maximum: 7
+          example: 4
+        comment:
+          type: string
+          example: Хотим попасть в среднюю группу
+    Application:
+      allOf:
+        - $ref: '#/components/schemas/ApplicationRequest'
+        - type: object
+          properties:
+            id: { type: integer }
+            status: { type: string, example: new }
+            createdAt: { type: string, format: date-time }
+    QuestionRequest:
+      type: object
+      required: [name, phone, text]
+      properties:
+        name:
+          type: string
+          example: Мария Петрова
+        phone:
+          type: string
+          example: '+7 900 987-65-43'
+        text:
+          type: string
+          example: Можно ли записаться на экскурсию по детскому саду?
+    Question:
+      allOf:
+        - $ref: '#/components/schemas/QuestionRequest'
+        - type: object
+          properties:
+            id: { type: integer }
+            status: { type: string, example: new }
+            createdAt: { type: string, format: date-time }
+    SearchResult:
+      type: object
+      properties:
+        type: { type: string, example: news }
+        title: { type: string }
+        description: { type: string }
+        url: { type: string, example: parents.html#news }
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: укажите корректный телефон
